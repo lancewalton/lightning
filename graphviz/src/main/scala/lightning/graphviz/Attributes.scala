@@ -1,4 +1,4 @@
-package lightning.renderer.graphviz
+package lightning.graphviz
 
 case class Attributes(list: List[Attribute] = Nil) {
   def +(attribute: Attribute): Attributes = new Attributes(attribute :: list)

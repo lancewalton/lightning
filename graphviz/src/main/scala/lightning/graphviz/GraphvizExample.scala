@@ -1,4 +1,4 @@
-package lightning.renderer.graphviz
+package lightning.graphviz
 
 import java.util.Date
 

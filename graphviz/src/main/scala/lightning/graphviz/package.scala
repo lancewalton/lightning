@@ -1,4 +1,4 @@
-package lightning.renderer
+package lightning
 
 import java.util.Date
 
