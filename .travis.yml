@@ -1,6 +1,6 @@
 language: scala
- scala:
-   - "2.11.7"
- jdk:
-   - oraclejdk8
- script: "./sbt compile"
+scala:
+  - "2.11.7"
+jdk:
+  - oraclejdk8
+script: "./sbt compile"
