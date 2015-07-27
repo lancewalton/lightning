@@ -1,8 +1,8 @@
-package lightning.configuration
+package lightning.configuration.loader
 
 import java.net.{ URI, URL }
 
-import scalaz.syntax.validation.ToValidationOps
+import scalaz.syntax.validation._
 
 trait Read[A] {
   def read(in: String): Validated[A]

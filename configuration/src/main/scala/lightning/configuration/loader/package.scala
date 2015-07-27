@@ -1,8 +1,8 @@
-package lightning
+package lightning.configuration
 
 import scalaz.{ Validation, ValidationNel }
 
-package object configuration {
+package object loader {
   type ErrorMessage = String
   type Validated[T] = ValidationNel[ErrorMessage, T]
 
