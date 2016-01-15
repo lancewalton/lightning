@@ -2,9 +2,10 @@ package lightning
 
 import java.util.Date
 
-import lightning.model.{ Dependency, Graph, Node, TimestampedDependency, TimestampedNode }
+import lightning.model.{ Dependency, Graph, Node, VisibilityDependency, VisibilityNode }
 import scalaz.Show
 import scalaz.syntax.show._
+import scalaz.syntax.std.boolean._
 
 package object graphviz {
   val successColor = "green"
@@ -18,41 +19,41 @@ package object graphviz {
   
   def subgraphName(node: Node) = quote(s"cluster_${node.system}")
 
-  implicit object TimestampedNodeShow extends Show[TimestampedNode] {
+  implicit object VisibilityNodeShow extends Show[VisibilityNode] {
     def label(node: Node) = Attribute("label", quote(node.clusterNode getOrElse node.system))
-    def fillColor(timestamp: Option[Date]) = timestamp map { _ ⇒ Attribute("fillcolor", successColor) }
-    def attributes(n: TimestampedNode) = (Attributes() + label(n.timestamped) + fillColor(n.timestamp))
+    def fillColor(visibility: Boolean) = visibility option Attribute("fillcolor", successColor)
+    def attributes(n: VisibilityNode) = (Attributes() + label(n.item) + fillColor(n.visible))
 
-    override def shows(n: TimestampedNode) = s"${nodeId(n.timestamped)} ${attributes(n)};"
+    override def shows(n: VisibilityNode) = s"${nodeId(n.item)} ${attributes(n)};"
   }
 
-  implicit object TimestampedClusterNodesShow extends Show[Set[TimestampedNode]] {
-    private def clusterNodes(ns: Set[TimestampedNode]) = ns.map { _.show }.mkString("\r\n|")
+  implicit object VisibilityClusterNodesShow extends Show[Set[VisibilityNode]] {
+    private def clusterNodes(ns: Set[VisibilityNode]) = ns.map { _.show }.mkString("\r\n|")
     
-    override def shows(ns: Set[TimestampedNode]) =
+    override def shows(ns: Set[VisibilityNode]) =
       ns.headOption
         .fold("") { firstNode =>
-          s"""|subgraph ${subgraphName(firstNode.timestamped)} {
-              |label = "${firstNode.timestamped.system}";
+          s"""|subgraph ${subgraphName(firstNode.item)} {
+              |label = "${firstNode.item.system}";
               |${clusterNodes(ns)}
               |}"""
         }
   }
   
-  implicit object TimestampedDependencyShow extends Show[TimestampedDependency] {
+  implicit object VisibilityDependencyShow extends Show[VisibilityDependency] {
     def label(d: Dependency) = Attribute("label", d.label)
-    def color(ts: Option[Date]) = ts map { _ => Attribute("color", successColor) }
-    def attributes(d: TimestampedDependency) = (Attributes() + label(d.timestamped) + color(d.timestamp))
+    def color(visibility: Boolean) = visibility option Attribute("color", successColor)
+    def attributes(d: VisibilityDependency) = (Attributes() + label(d.item) + color(d.visible))
       
-    override def shows(d: TimestampedDependency) = s"${nodeId(d.timestamped.from)} -> ${nodeId(d.timestamped.to)} ${attributes(d)};"
+    override def shows(d: VisibilityDependency) = s"${nodeId(d.item.from)} -> ${nodeId(d.item.to)} ${attributes(d)};"
   }
   
-  implicit object TimestampedDependencySetShow extends Show[Set[TimestampedDependency]] {
-    override def shows(ds: Set[TimestampedDependency]) = ds.map { _.show }.mkString("\r\n|")
+  implicit object VisibilityDependencySetShow extends Show[Set[VisibilityDependency]] {
+    override def shows(ds: Set[VisibilityDependency]) = ds.map { _.show }.mkString("\r\n|")
   }
   
   implicit object GraphShow extends Show[Graph] {
-    private def showNodes(nodes: Set[TimestampedNode]) = nodes.groupBy { _.timestamped.system }.map(_._2.show).mkString("\r\n")
+    private def showNodes(nodes: Set[VisibilityNode]) = nodes.groupBy { _.item.system }.map(_._2.show).mkString("\r\n")
     
     override def shows(g: Graph) =
       s"""|digraph status {

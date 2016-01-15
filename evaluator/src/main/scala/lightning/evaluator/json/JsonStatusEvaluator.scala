@@ -1,7 +1,6 @@
 package lightning.evaluator.json
 
 import lightning.evaluator.StatusEvaluator
-import lightning.model.Timestamped
 import lightning.model.Dependency
 import argonaut.Parse
 import lightning.evaluator.RootedGraph

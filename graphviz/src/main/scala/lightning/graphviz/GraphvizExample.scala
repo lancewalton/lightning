@@ -2,19 +2,22 @@ package lightning.graphviz
 
 import java.util.Date
 
-import lightning.model.{ Dependency, Graph, Node, SystemName, Timestamped, TimestampedDependency, TimestampedNode }
+import lightning.model.{ Dependency, Graph, Node, SystemName, Visibility, VisibilityDependency, VisibilityNode }
 import scalaz.std.string._
 import scalaz.syntax.std.option._
 
 object GraphvizExample extends App {
-  val n11 = Timestamped(Node("IB SS Intranet", Some("dev1")), Some(new Date))
-  val n12 = Timestamped(Node("IB SS Intranet", Some("dev2")), None)
-  val n2 = Timestamped(Node("Loganberry", None), Some(new Date))
+  val n11 = Visibility(Node("IB SS Intranet", Some("dev1")), true)
+  val n12 = Visibility(Node("IB SS Intranet", Some("dev2")), false)
+  val n2 = Visibility(Node("Loganberry", None), true)
 
   val g = Graph.empty ⊕
     n11 ⊕ n12 ⊕ n2 ⥅
-    Timestamped(Dependency(n11.timestamped, n2.timestamped, "n11_n2"), None)
+    Visibility(Dependency(n11.item, n2.item, "n11_n2"), false)
 
   import scalaz.syntax.show._
   println(g.show)
+  
+  println
+  println(Graph.codec.encode(g).spaces2)
 }

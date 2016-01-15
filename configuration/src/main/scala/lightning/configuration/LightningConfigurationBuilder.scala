@@ -20,9 +20,10 @@ case class LightningConfigurationLoader(config: Config) extends ConfigurationUti
 
   def apply() = {
     for {
+      httpPort <- required[Int]("http.port")
       environmentNames ← list[String]("environments")
       serviceNames ← list[String]("services")
       services ← readStatusEvaluatorSetsByEnvironment(environmentNames, serviceNames)
-    } yield services
+    } yield LightningConfiguration(httpPort, services)
   }
 }

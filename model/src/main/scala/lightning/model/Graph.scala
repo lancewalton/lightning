@@ -5,42 +5,41 @@ import scalaz.Equal
 import scalaz.syntax.equal.ToEqualOps
 import scalaz.Monoid
 
-case class Graph(nodes: Set[TimestampedNode] = Set.empty, dependencies: Set[TimestampedDependency] = Set.empty) {
+case class Graph(nodes: Set[VisibilityNode] = Set.empty, dependencies: Set[VisibilityDependency] = Set.empty) {
   def +(that: Graph) = this ⊕⊕ that.nodes ⥅⥅ that.dependencies
 
-  def ⊕⊕(nodes: Set[TimestampedNode]) = addNodes(nodes)
-  def addNodes(nodes: Set[TimestampedNode]) = nodes.toList.foldLeft(this) { _ ⊕ _ }
+  def ⊕⊕(nodes: Set[VisibilityNode]) = addNodes(nodes)
+  def addNodes(nodes: Set[VisibilityNode]) = nodes.toList.foldLeft(this) { _ ⊕ _ }
 
-  def ⊕(node: TimestampedNode) = addNode(node)
-  def addNode(node: TimestampedNode) =
-    replaceWithLatestTimestamp[Node](nodes, node, newNodes ⇒ copy(nodes = newNodes))
+  def ⊕(node: VisibilityNode) = addNode(node)
+  def addNode(node: VisibilityNode) =
+    replaceWithGreatestVisibility[Node](nodes, node, newNodes ⇒ copy(nodes = newNodes))
 
-  def ⥅⥅(dependencies: Set[TimestampedDependency]) = addDependencies(dependencies)
-  def addDependencies(dependencies: Set[TimestampedDependency]) = dependencies.toList.foldLeft(this) { _ ⥅ _ }
+  def ⥅⥅(dependencies: Set[VisibilityDependency]) = addDependencies(dependencies)
+  def addDependencies(dependencies: Set[VisibilityDependency]) = dependencies.toList.foldLeft(this) { _ ⥅ _ }
 
-  def ⥅(dependency: TimestampedDependency) = addDependency(dependency)
-  def addDependency(dependency: TimestampedDependency) =
-    replaceWithLatestTimestamp[Dependency](dependencies, dependency, newDependencies ⇒ copy(dependencies = newDependencies))
-      .addNode(Timestamped(dependency.timestamped.from, dependency.timestamp))
-      .addNode(Timestamped(dependency.timestamped.to, dependency.timestamp))
+  def ⥅(dependency: VisibilityDependency) = addDependency(dependency)
+  def addDependency(dependency: VisibilityDependency) =
+    replaceWithGreatestVisibility[Dependency](dependencies, dependency, newDependencies ⇒ copy(dependencies = newDependencies))
+      .addNode(Visibility(dependency.item.from, dependency.visible))
+      .addNode(Visibility(dependency.item.to, dependency.visible))
 
-  private def replaceWithLatestTimestamp[T: Equal](ts: Set[Timestamped[T]], possibleUpdate: Timestamped[T], update: Set[Timestamped[T]] ⇒ Graph): Graph = {
-    implicit val te = Timestamped.equal[T]
+  private def replaceWithGreatestVisibility[T: Equal](ts: Set[Visibility[T]], possibleUpdate: Visibility[T], update: Set[Visibility[T]] ⇒ Graph): Graph = {
+    implicit val te = Visibility.equal[T]
     ts
-      .find(t ⇒ t.timestamped === possibleUpdate.timestamped)
+      .find(t ⇒ t.item === possibleUpdate.item)
       .fold(update(ts + possibleUpdate)) { existing ⇒
-        existing.timestamp.map((existing, _)).select(possibleUpdate.timestamp.map((possibleUpdate, _))) { (l, r) ⇒
-          if (l._2 before r._2) l else r
-        } map { case (replacement, _) ⇒ update(ts.filterNot(_ === existing) + replacement) } getOrElse this
-      }
+        if (existing.visible) this
+        else update(ts.filterNot(_.item === possibleUpdate.item) + possibleUpdate)
+    }
   }
 }
 
 object Graph {
   val empty = Graph()
 
-  implicit val timestampedNodeCode = Timestamped.codec[Node]
-  implicit val timestampedDependencyCode = Timestamped.codec[Dependency]
+  implicit val timestampedNodeCode = Visibility.codec[Node]
+  implicit val timestampedDependencyCode = Visibility.codec[Dependency]
   
   implicit val codec = casecodec2(Graph.apply, Graph.unapply)("nodes", "dependencies")
   

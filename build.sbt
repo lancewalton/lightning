@@ -10,7 +10,7 @@ val commonSettings = Seq(
 lazy val root =
   project
     .in( file(".") )
-    .aggregate(model, evaluator, graphviz)
+    .aggregate(model, evaluator, graphviz, configuration, server)
    
 lazy val model =
   project
@@ -28,7 +28,7 @@ lazy val evaluator =
     .settings(commonSettings: _*)
     .settings(Seq(
       name := "lightning-evaluator",
-      libraryDependencies += naiveHttpClient
+      libraryDependencies += naiveHttp
     ): _*)
 
 lazy val graphviz =
@@ -50,10 +50,19 @@ lazy val configuration =
         typesafeConfig,
         shapelessScalaz)
     ): _*)
+    
+lazy val server =
+  project
+    .dependsOn(model, evaluator, configuration)
+    .settings(commonSettings: _*)
+    .settings(Seq(
+      name := "lightning-server",
+      libraryDependencies ++= Seq()
+    ): _*)
 
 lazy val scalazCore        = "org.scalaz"                   %% "scalaz-core"                    % "7.1.3"
 lazy val argonaut          = "io.argonaut"                  %% "argonaut"                       % "6.1"
-lazy val naiveHttpClient   = "io.shaka"                     %% "naive-http"                     % "73"
+lazy val naiveHttp         = "io.shaka"                     %% "naive-http"                     % "73"
 lazy val typesafeConfig    = "com.typesafe"                  % "config"                         % "1.3.0"
 lazy val shapelessScalaz   = "org.typelevel"                 %% "shapeless-scalaz"          % "0.4"         
 
