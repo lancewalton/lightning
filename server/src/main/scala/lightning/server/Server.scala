@@ -18,7 +18,6 @@ object Server extends App {
          |  -Dconfig=local
          |
          |Where 'local' should reflect the configuration for your environment.
-         |Ask the Boost team for help if you have questions.
          |
          |Have a nice day.
        """.stripMargin
